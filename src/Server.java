@@ -88,6 +88,7 @@ public class Server {
         {
             try
             {
+
                 if(!s.isClosed()){
                     System.out.println(s + "用户已连接服务器！下一步将判断是否能登录成功..");
                     //socketList.add(s);
