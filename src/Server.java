@@ -12,7 +12,7 @@ import java.util.LinkedList;
 //import org.slf4j.Logger;
 //import org.slf4j.LoggerFactory;
 //
-//import com.google.gson.Gson;
+import com.google.gson.Gson;
 //
 //import com.chatroom.messages.Message;
 //import com.chatroom.messages.MessageType;
@@ -23,21 +23,21 @@ import java.util.LinkedList;
  *
  * @Title: Server.java
  * @Description: TODO 后端服务器程序
- * @author ZhangJing   https://github.com/Laity000/ChatRoom-JavaFX
- * @date 2017年5月17日 上午11:21:38
+ * @author
  *
  */
 public class Server {
 
     //服务端端口号
-    private static final int SERVER_PORT =12345;
+    private static final int SERVER_PORT =44444;
     //Gson
-  //  private static Gson gson = new Gson();
+    private static Gson gson = new Gson();
     //用户名与客户端对象的映射
     private static HashMap<String, Socket> socketsfromUserNames = new HashMap<>();
     //用户信息集合
 
    // private static LinkedList<UserInfo> userInfoList = new LinkedList<>();
+    private  JabberDatabase jabberDatabase;
 
     public static void main(String[] args) throws IOException{
 
@@ -68,7 +68,8 @@ public class Server {
         private BufferedReader br = null;
         private InputStream in = null;
 
-        private JabberMessage jabberMessage;
+        private JabberMessage jabberMessage ;
+        private JabberDatabase jabberDatabase;
         private ArrayList<ArrayList<String>> response;
         /**
          *
@@ -88,18 +89,33 @@ public class Server {
         {
             try
             {
-
-
                 if(!s.isClosed()){
                     System.out.println(s + "用户已连接服务器！下一步将判断是否能登录成功..");
                     //socketList.add(s);
+//                    response = new ArrayList<ArrayList<String>>();
+//                    jabberMessage =new JabberMessage("1",response);
+//                    send(jabberMessage,s);
                 }
                 while (s.isConnected()) {
                     //读取来自客户端的消息
                     String revString = br.readLine();
                     if(revString != null){
-                        response = new ArrayList<ArrayList<String>>();
-                        jabberMessage =new JabberMessage("1",response);
+                        jabberMessage=gson.fromJson(revString,JabberMessage.class);
+                        if (jabberMessage.getMessage().contains("signin")){
+                            System.out.println("登录操作");
+                            String username=jabberMessage.getMessage().replace("signin ","");
+                            System.out.println(username);
+                            try {
+                                jabberDatabase =new JabberDatabase();
+                                jabberDatabase.addUser(username,"13754512@QQ.COM");
+                                jabberDatabase.getUserID(username);
+                            }
+                            catch (Exception e){
+                                e.printStackTrace();
+                            }
+
+                        }
+
                       //  Message message = gson.fromJson(revString, Message.class);
                         //System.out.println(revString);
                     //    logger.info("服务器收到数据..");
@@ -143,30 +159,30 @@ public class Server {
         }
         /**
          * 将message转化为字符串后发送指定的客户端
-         * @param message
+         * @param jabberMessage
          * @param socket
          */
-//        private void send(Message message,Socket socket) throws IOException{
-//            //转化为gson的字符串
-//            String messagesString = gson.toJson(message);
-//            //System.out.println(messagesString);
-//            logger.info("服务器发送单播数据..");
-//            logger.debug("数据内容:{}", messagesString);
-//            PrintStream ps = new PrintStream(socket.getOutputStream());
-//            //发送消息，注意消息格式为(messageString + "\n")
-//            ps.println(messagesString);
-//            logger.info("数据发送完成!");
-//        }
+        private void send(JabberMessage jabberMessage,Socket socket) throws IOException{
+            //转化为gson的字符串
+            String messagesString = gson.toJson(jabberMessage);
+            System.out.println(messagesString);
+           // logger.info("服务器发送单播数据..");
+            //logger.debug("数据内容:{}", messagesString);
+            PrintStream ps = new PrintStream(socket.getOutputStream());
+            //发送消息，注意消息格式为(messageString + "\n")
+            ps.println(messagesString);
+           // logger.info("数据发送完成!");
+        }
         /**
          * 将message转化为字符串后发送给所有的客户端
-         * @param message
+         * @param jabberMessage
          */
-//        private void sendAll(Message message, boolean isRemoveLocalUser) throws IOException{
+//        private void sendAll(JabberMessage jabberMessage, boolean isRemoveLocalUser) throws IOException{
 //            //转化为gson的字符串
-//            String messagesString = gson.toJson(message);
-//            //System.out.println(messagesString);
-//            logger.info("服务器发送广播数据..");
-//            logger.debug("数据内容:{}", messagesString);
+//            String messagesString = gson.toJson(jabberMessage);
+//            System.out.println(messagesString);
+//            //logger.info("服务器发送广播数据..");
+//            //logger.debug("数据内容:{}", messagesString);
 //            PrintStream ps = null;
 //            if(isRemoveLocalUser){
 //                for(HashMap.Entry<String, Socket> entry : socketsfromUserNames.entrySet()) {
@@ -183,7 +199,7 @@ public class Server {
 //                    ps.println(messagesString);
 //                }
 //            }
-//            logger.info("数据发送完成!");
+//         //   logger.info("数据发送完成!");
 //        }
         /**
          * 检查是否登录成功，并发送登录结果

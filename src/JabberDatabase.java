@@ -18,7 +18,7 @@ public class JabberDatabase {
 	
 	private static String dbcommand = "jdbc:postgresql://127.0.0.1:5432/postgres";
 	private static String db = "postgres";
-	private static String pw = "";
+	private static String pw = "123456";
 
 	private Connection conn;
 	
